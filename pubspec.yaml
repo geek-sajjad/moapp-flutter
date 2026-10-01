@@ -1,0 +1,59 @@
+name: daftar_moein
+description: "دفتر معین شخصی - Personal offline ledger (single user, SQLite)."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.6.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Local database
+  sqflite: ^2.4.1
+  path: ^1.9.0
+
+  # Jalali (Persian) calendar
+  shamsi_date: ^1.1.1
+
+  # SVG icons (same feather icons as the web app)
+  flutter_svg: ^2.0.16
+
+  # Share statement via SMS / system share sheet
+  url_launcher: ^6.3.1
+  share_plus: ^11.0.0
+
+  # Backup: save / pick backup file
+  file_picker: ^10.1.9
+
+  uuid: ^4.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/icons/
+
+  fonts:
+    - family: Vazirmatn
+      fonts:
+        - asset: assets/fonts/Vazirmatn-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Vazirmatn-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Vazirmatn-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Vazirmatn-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Vazirmatn-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Vazirmatn-ExtraBold.ttf
+          weight: 800
