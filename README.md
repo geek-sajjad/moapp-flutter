@@ -37,8 +37,8 @@ Release build: `flutter build apk --release`. You still need to configure signin
 
 ```
 lib/
-  main.dart                      MaterialApp (fa locale, RTL, Vazirmatn, light/dark) + alert host
-  models/                        Customer, LedgerTransaction, TransactionSummary
+  main.dart                      MaterialApp (fa locale, RTL, Vazirmatn, light theme) + alert host
+  models/                        Customer, LedgerTransaction, TransactionSummary, LedgerReport
   data/
     app_database.dart            sqflite schema (customers, transactions)
     customer_repository.dart     = backend CustomerService
@@ -52,6 +52,7 @@ lib/
   screens/
     customer_list/               /customers page
     transaction_view/            /transactions/:id page
+    report/                      overall balances report (new, not in the web app)
 assets/fonts/                    Vazirmatn TTF
 tool/setup_android.dart          post-`flutter create` patcher
 ```

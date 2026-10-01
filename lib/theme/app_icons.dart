@@ -34,6 +34,11 @@ abstract final class AppIcons {
   static const receipt = IconData(0xe3ec, fontFamily: _f);
   static const save = IconData(0xe248, fontFamily: _f);
   static const empty = IconData(0xe4aa, fontFamily: _f);
+  static const report = IconData(0xe15a, fontFamily: _f);
+  static const scales = IconData(0xe750, fontFamily: _f);
+  static const trendUp = IconData(0xe4ae, fontFamily: _f);
+  static const trendDown = IconData(0xe4ac, fontFamily: _f);
+  static const checks = IconData(0xe53a, fontFamily: _f);
 
   /// "Back": points left in LTR and right in RTL.
   static const back = IconData(0xe058,

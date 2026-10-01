@@ -1,5 +1,7 @@
 import 'package:uuid/uuid.dart';
 
+import '../models/customer.dart';
+import '../models/ledger_report.dart';
 import '../models/ledger_transaction.dart';
 import 'app_database.dart';
 import 'customer_repository.dart';
@@ -70,5 +72,29 @@ class TransactionRepository {
       totalType:
           totalBalance > 0 ? TransactionType.credit : TransactionType.debit,
     );
+  }
+
+  /// Balance of every customer (archived included), for the report page.
+  Future<LedgerReport> getReport() async {
+    final db = await AppDatabase.instance.database;
+    final rows = await db.rawQuery('''
+      SELECT
+        c.*,
+        COALESCE(SUM(CASE WHEN t.type = 'CREDIT' THEN t.amount ELSE -t.amount END), 0)
+          AS balance,
+        COUNT(t.id) AS transaction_count
+      FROM customers c
+      LEFT JOIN transactions t ON t.customer_id = c.id
+      GROUP BY c.id
+      ''');
+
+    return LedgerReport([
+      for (final row in rows)
+        CustomerBalance(
+          customer: Customer.fromRow(row),
+          balance: (row['balance'] as num).toInt(),
+          transactionCount: (row['transaction_count'] as num).toInt(),
+        ),
+    ]);
   }
 }

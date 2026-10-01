@@ -7,6 +7,7 @@ import '../../utils/persian_format.dart';
 import '../../widgets/app_alert.dart';
 import '../../widgets/app_modal.dart';
 import '../../widgets/empty_state.dart';
+import '../report/report_screen.dart';
 import '../transaction_view/transaction_view_screen.dart';
 import 'backup_sheet.dart';
 import 'customer_card.dart';
@@ -214,6 +215,14 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     );
   }
 
+  Future<void> _openReport() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const ReportScreen()),
+    );
+    // Customers may have been edited from the report's customer pages.
+    if (mounted) await _loadCustomers(showLoading: false);
+  }
+
   Future<void> _viewTransactions(Customer customer) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -240,6 +249,11 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
               style: TextStyle(fontWeight: FontWeight.w700),
             ),
             actions: [
+              IconButton(
+                onPressed: _openReport,
+                tooltip: 'گزارش حساب‌ها',
+                icon: const Icon(AppIcons.report),
+              ),
               IconButton(
                 onPressed: _openBackupModal,
                 tooltip: 'پشتیبان‌گیری',
