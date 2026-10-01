@@ -56,7 +56,7 @@ tool/setup_android.dart          post-`flutter create` patcher
   - *Save backup* writes a `daftar-moein-backup-YYYY-MM-DD.json` file (Jalali date) to a location you pick with the system file dialog.
   - *Restore* picks such a file, validates it, asks for confirmation, then replaces all data in one SQLite transaction.
 - **Bug fixes:**
-  1. Editing a customer now saves the description. The backend used to ignore it. In the transaction-page edit form, clearing the phone or description now clears it.
+  1. Editing a customer now saves the description. The backend used to ignore it. In the transaction-page edit form, clearing the description clears it. Clearing the phone keeps the old number, same as the web app.
   2. The new-transaction form resets after a successful save to: today, بستانکار, empty amount and empty description.
   3. Transaction dates are stored as plain local `yyyy-MM-dd`. The web app sent a UTC timestamp, which could save the previous day in Iran's time zone.
 - After archiving or unarchiving, the list reloads, so with "show archived" off an archived customer disappears right away.

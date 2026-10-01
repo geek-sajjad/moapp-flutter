@@ -158,16 +158,25 @@ class TransactionItem extends StatelessWidget {
               Expanded(
                 child: Text(
                   formatJalaliDisplay(transaction.date),
+                  maxLines: 1,
                   style: const TextStyle(fontSize: 14, color: AppColors.gray500),
                 ),
               ),
-              Text(
-                '${isDebit ? '-' : '+'} ${formatNumberFa(transaction.amount)} تومان',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+              const SizedBox(width: 8),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: Text(
+                    '${isDebit ? '-' : '+'} ${formatNumberFa(transaction.amount)} تومان',
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: color,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
                 ),
               ),
             ],

@@ -194,15 +194,37 @@ class ThousandsAmountFormatter extends TextInputFormatter {
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    var digits =
-        toEnglishNumbers(newValue.text).replaceAll(RegExp(r'[^0-9]'), '');
+    String onlyDigits(String s) =>
+        toEnglishNumbers(s).replaceAll(RegExp(r'[^0-9]'), '');
+
+    var digits = onlyDigits(newValue.text);
     if (digits.length > _maxDigits) digits = digits.substring(0, _maxDigits);
-    if (digits.isEmpty) return const TextEditingValue();
+    if (digits.isEmpty) {
+      return const TextEditingValue(
+        selection: TextSelection.collapsed(offset: 0),
+      );
+    }
 
     final formatted = formatNumberEn(int.parse(digits));
+
+    // Keep the caret after the same number of digits as before formatting
+    // (leading zeros are dropped by int.parse, so clamp).
+    final cursor = newValue.selection.isValid
+        ? newValue.selection.end.clamp(0, newValue.text.length)
+        : newValue.text.length;
+    var digitsBeforeCursor = onlyDigits(newValue.text.substring(0, cursor)).length;
+    digitsBeforeCursor -= digits.length - formatted.replaceAll(',', '').length;
+    if (digitsBeforeCursor < 0) digitsBeforeCursor = 0;
+
+    var offset = 0;
+    var seen = 0;
+    while (offset < formatted.length && seen < digitsBeforeCursor) {
+      if (formatted[offset] != ',') seen++;
+      offset++;
+    }
     return TextEditingValue(
       text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
+      selection: TextSelection.collapsed(offset: offset),
     );
   }
 }

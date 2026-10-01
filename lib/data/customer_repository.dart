@@ -57,14 +57,16 @@ class CustomerRepository {
   Future<Customer> update(String id, UpdateCustomerDto dto) async {
     final db = await AppDatabase.instance.database;
     await findOne(id);
+    final values = <String, Object?>{
+      'name': dto.name,
+      'description': dto.description,
+      'updated_at': nowIso(),
+    };
+    // Same as the backend: an omitted phone number keeps the current one.
+    if (dto.phoneNumber != null) values['phone_number'] = dto.phoneNumber;
     await db.update(
       'customers',
-      {
-        'name': dto.name,
-        'phone_number': dto.phoneNumber,
-        'description': dto.description,
-        'updated_at': nowIso(),
-      },
+      values,
       where: 'id = ?',
       whereArgs: [id],
     );

@@ -189,9 +189,13 @@ class _TransactionViewScreenState extends State<TransactionViewScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: ListView(
+        // Not a lazy ListView: the transaction form must keep its state
+        // (typed amount, date, type) while scrolled off-screen.
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(12),
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Back Button
             EntryAnimation(
@@ -221,7 +225,10 @@ class _TransactionViewScreenState extends State<TransactionViewScreen> {
             ],
 
             // Transaction Form Card
-            TransactionForm(onSave: _saveTransaction),
+            TransactionForm(
+              key: const ValueKey('transaction-form'),
+              onSave: _saveTransaction,
+            ),
             const SizedBox(height: 16),
 
             // Transactions List
@@ -246,6 +253,7 @@ class _TransactionViewScreenState extends State<TransactionViewScreen> {
               ),
             ],
           ],
+          ),
         ),
       ),
     );

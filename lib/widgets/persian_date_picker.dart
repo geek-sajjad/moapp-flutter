@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 
@@ -27,6 +28,7 @@ class PersianDatePicker extends StatefulWidget {
 
 class _PersianDatePickerState extends State<PersianDatePicker> {
   bool _isOpen = false;
+  final _calendarKey = GlobalKey();
   late int _year;
   late int _month;
 
@@ -53,10 +55,44 @@ class _PersianDatePickerState extends State<PersianDatePicker> {
     return date == null ? null : Jalali.fromDateTime(date);
   }
 
-  void _toggle() => setState(() => _isOpen = !_isOpen);
+  void _toggle() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() => _isOpen = !_isOpen);
+    if (_isOpen) {
+      // Wait for AnimatedSize to finish, then bring the calendar into view.
+      Future.delayed(const Duration(milliseconds: 220), () {
+        final ctx = _calendarKey.currentContext;
+        if (mounted && ctx != null) {
+          Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 200),
+            alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+          );
+        }
+      });
+    }
+  }
 
   void _close() {
-    if (_isOpen) setState(() => _isOpen = false);
+    if (_isOpen && mounted) setState(() => _isOpen = false);
+  }
+
+  /// Closes the calendar only on a real tap outside (pointer released close
+  /// to where it went down), so scrolling the page does not close it.
+  void _onTapOutside(PointerDownEvent down) {
+    if (!_isOpen) return;
+    void route(PointerEvent event) {
+      if (event.pointer != down.pointer) return;
+      if (event is PointerUpEvent || event is PointerCancelEvent) {
+        GestureBinding.instance.pointerRouter.removeGlobalRoute(route);
+        if (event is PointerUpEvent &&
+            (event.position - down.position).distance < kTouchSlop) {
+          _close();
+        }
+      }
+    }
+
+    GestureBinding.instance.pointerRouter.addGlobalRoute(route);
   }
 
   void _previousMonth() {
@@ -102,7 +138,7 @@ class _PersianDatePickerState extends State<PersianDatePicker> {
   @override
   Widget build(BuildContext context) {
     return TapRegion(
-      onTapOutside: (_) => _close(),
+      onTapOutside: _onTapOutside,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -158,6 +194,7 @@ class _PersianDatePickerState extends State<PersianDatePicker> {
     final days = _calendarDays();
 
     return Container(
+      key: _calendarKey,
       margin: const EdgeInsets.only(top: 8),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -182,27 +219,36 @@ class _PersianDatePickerState extends State<PersianDatePicker> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _HeaderButton(
-                  onTap: _previousMonth,
-                  children: const [
-                    AppIcon(AppIconName.chevronRight, size: 20, color: AppColors.white),
-                    Text('ماه قبل', style: TextStyle(color: AppColors.white)),
-                  ],
-                ),
-                Text(
-                  jalaliMonthTitle(_year, _month),
-                  style: const TextStyle(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
+                Flexible(
+                  child: _HeaderButton(
+                    onTap: _previousMonth,
+                    children: const [
+                      AppIcon(AppIconName.chevronRight, size: 20, color: AppColors.white),
+                      Flexible(child: _HeaderLabel('ماه قبل')),
+                    ],
                   ),
                 ),
-                _HeaderButton(
-                  onTap: _nextMonth,
-                  children: const [
-                    Text('ماه بعد', style: TextStyle(color: AppColors.white)),
-                    AppIcon(AppIconName.chevronLeft, size: 20, color: AppColors.white),
-                  ],
+                Expanded(
+                  child: Text(
+                    jalaliMonthTitle(_year, _month),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                Flexible(
+                  child: _HeaderButton(
+                    onTap: _nextMonth,
+                    children: const [
+                      Flexible(child: _HeaderLabel('ماه بعد')),
+                      AppIcon(AppIconName.chevronLeft, size: 20, color: AppColors.white),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -293,6 +339,22 @@ class _PersianDatePickerState extends State<PersianDatePicker> {
 
 bool _isSameDay(Jalali a, Jalali? b) =>
     b != null && a.year == b.year && a.month == b.month && a.day == b.day;
+
+class _HeaderLabel extends StatelessWidget {
+  final String text;
+
+  const _HeaderLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(color: AppColors.white),
+    );
+  }
+}
 
 class _HeaderButton extends StatelessWidget {
   final VoidCallback onTap;

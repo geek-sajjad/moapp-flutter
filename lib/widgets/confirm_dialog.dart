@@ -14,6 +14,7 @@ Future<bool> showConfirmDialog({
     context: context,
     isDismissible: false,
     enableDrag: false,
+    isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: Colors.transparent,
     barrierColor: AppColors.black.withValues(alpha: 0.6),
@@ -27,10 +28,14 @@ Future<bool> showConfirmDialog({
           right: BorderSide(color: AppColors.gray300),
         ),
       ),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(sheetContext).size.height * 0.9,
+      ),
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(sheetContext).padding.bottom,
       ),
-      child: Column(
+      child: SingleChildScrollView(
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 24),
@@ -86,6 +91,7 @@ Future<bool> showConfirmDialog({
             ),
           ),
         ],
+        ),
       ),
     ),
   );
