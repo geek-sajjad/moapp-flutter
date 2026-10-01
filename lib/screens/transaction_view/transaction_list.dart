@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../models/ledger_transaction.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/app_icons.dart';
+import '../../theme/app_theme.dart';
 import '../../utils/persian_format.dart';
-import '../../widgets/app_icon.dart';
-import '../../widgets/entry_animation.dart';
+import '../../widgets/empty_state.dart';
 
 /// Port of the web `app-transaction-list`.
 class TransactionList extends StatelessWidget {
@@ -14,105 +14,46 @@ class TransactionList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return EntryAnimation(
-      duration: const Duration(milliseconds: 500),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.gray300),
-          boxShadow: AppShadows.xl,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              decoration: const BoxDecoration(
-                gradient: cardHeaderGradient,
-                border: Border(bottom: BorderSide(color: AppColors.gray300)),
-              ),
-              child: Row(
-                children: [
-                  const AppIcon(AppIconName.fileText, size: 20, color: AppColors.blue600),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'تراکنش‌ها',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.gray900,
-                    ),
-                  ),
-                  if (transactions.isNotEmpty) ...[
-                    const SizedBox(width: 10),
-                    Text(
-                      '(${transactions.length})',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.gray600,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            if (transactions.isEmpty)
-              const _EmptyTransactions()
-            else
-              for (var i = 0; i < transactions.length; i++) ...[
-                if (i > 0) const Divider(height: 1, thickness: 1, color: AppColors.gray100),
-                TransactionItem(transaction: transactions[i]),
-              ],
-          ],
-        ),
-      ),
-    );
-  }
-}
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
 
-class _EmptyTransactions extends StatelessWidget {
-  const _EmptyTransactions();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(40),
+    return Card.outlined(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: AppColors.gray100,
-              borderRadius: BorderRadius.circular(16),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
+            child: Row(
+              children: [
+                Text(
+                  'تراکنش‌ها',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (transactions.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  Badge(
+                    label: Text(toPersianNumbers('${transactions.length}')),
+                    backgroundColor: scheme.secondaryContainer,
+                    textColor: scheme.onSecondaryContainer,
+                  ),
+                ],
+              ],
             ),
-            alignment: Alignment.center,
-            child: const AppIcon(AppIconName.file, size: 36, color: AppColors.gray400),
           ),
-          const SizedBox(height: 16),
-          const Text(
-            'هیچ تراکنشی ثبت نشده است',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: AppColors.gray700,
-            ),
-          ),
+          if (transactions.isEmpty)
+            const EmptyState(
+              icon: Icon(AppIcons.empty),
+              title: 'هیچ تراکنشی ثبت نشده است',
+              subtitle: 'تراکنش اول را ثبت کنید',
+            )
+          else
+            for (var i = 0; i < transactions.length; i++) ...[
+              if (i > 0) const Divider(indent: 76),
+              TransactionItem(transaction: transactions[i]),
+            ],
           const SizedBox(height: 8),
-          const Text(
-            'تراکنش اول را ثبت کنید',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppColors.gray500,
-            ),
-          ),
         ],
       ),
     );
@@ -127,76 +68,72 @@ class TransactionItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final ledger = LedgerColors.of(context);
     final isDebit = transaction.type == TransactionType.debit;
-    final color = isDebit ? AppColors.red600 : AppColors.green600;
+    final color = isDebit ? ledger.debit : ledger.credit;
     final description = transaction.description ?? '';
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: isDebit ? AppColors.red100 : AppColors.green100,
-                  borderRadius: BorderRadius.circular(8),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundColor:
+                isDebit ? ledger.debitContainer : ledger.creditContainer,
+            foregroundColor:
+                isDebit ? ledger.onDebitContainer : ledger.onCreditContainer,
+            child: Icon(isDebit ? AppIcons.minus : AppIcons.plus, size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      formatJalaliDisplay(transaction.date),
+                      maxLines: 1,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: Text(
+                          '${isDebit ? '-' : '+'} ${formatNumberFa(transaction.amount)} تومان',
+                          maxLines: 1,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: color,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                alignment: Alignment.center,
-                child: AppIcon(
-                  isDebit ? AppIconName.minus : AppIconName.plus,
-                  size: 18,
-                  color: color,
-                ),
-              ),
-              const SizedBox(width: 16),
-              const AppIcon(AppIconName.calendar, size: 12, color: AppColors.gray500),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  formatJalaliDisplay(transaction.date),
-                  maxLines: 1,
-                  style: const TextStyle(fontSize: 14, color: AppColors.gray500),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: Text(
-                    '${isDebit ? '-' : '+'} ${formatNumberFa(transaction.amount)} تومان',
-                    maxLines: 1,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: color,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                if (description.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
                     ),
                   ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (description.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-            child: Text(
-              description,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 14,
-                height: 1.6,
-                color: AppColors.gray800,
-              ),
+              ],
             ),
           ),
-      ],
+        ],
+      ),
     );
   }
 }

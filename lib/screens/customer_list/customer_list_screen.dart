@@ -2,16 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../data/customer_repository.dart';
 import '../../models/customer.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/app_icons.dart';
+import '../../utils/persian_format.dart';
 import '../../widgets/app_alert.dart';
-import '../../widgets/app_button.dart';
-import '../../widgets/app_icon.dart';
 import '../../widgets/app_modal.dart';
-import '../../widgets/app_text_field.dart';
-import '../../widgets/app_toggle.dart';
-import '../../widgets/entry_animation.dart';
+import '../../widgets/empty_state.dart';
 import '../transaction_view/transaction_view_screen.dart';
-import 'app_header.dart';
 import 'backup_sheet.dart';
 import 'customer_card.dart';
 import 'customer_form.dart';
@@ -111,7 +107,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       title: 'افزودن مشتری جدید',
       builder: (sheetContext) => CustomerForm(
         buttonText: 'ثبت مشتری',
-        buttonIcon: AppIconName.userPlus,
+        buttonIcon: AppIcons.userPlus,
         onSave: (formData) => _addCustomer(sheetContext, formData),
       ),
     );
@@ -231,214 +227,134 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   @override
   Widget build(BuildContext context) {
     final customers = _customers;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [AppColors.blue50, AppColors.white, AppColors.gray50],
-          ),
-        ),
-        child: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.all(12),
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            children: [
-              _buildHeaderCard(),
-              const SizedBox(height: 16),
-              _buildActions(customers.length),
-              const SizedBox(height: 16),
-              ..._buildList(customers),
+      body: CustomScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        slivers: [
+          SliverAppBar.medium(
+            title: const Text(
+              'دفتر معین شخصی',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+            actions: [
+              IconButton(
+                onPressed: _openBackupModal,
+                tooltip: 'پشتیبان‌گیری',
+                icon: const Icon(AppIcons.database),
+              ),
+              const SizedBox(width: 4),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeaderCard() {
-    return EntryAnimation(
-      type: EntryAnimationType.fadeInDown,
-      child: Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.gray300),
-          boxShadow: AppShadows.xl,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AppHeader(onBackup: _openBackupModal),
-            Container(
-              color: AppColors.gray50,
-              padding: const EdgeInsets.all(16),
-              child: AppTextField(
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: SearchBar(
                 controller: _searchController,
                 hintText: 'جستجو بر اساس نام...',
-                leadingIcon: AppIconName.search,
-                onChanged: _onSearchChange,
-                shadow: true,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActions(int count) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            const AppIcon(AppIconName.users, size: 22, color: AppColors.blue600),
-            const SizedBox(width: 10),
-            const Text(
-              'لیست مشتریان',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: AppColors.gray900,
-              ),
-            ),
-            if (count > 0) ...[
-              const SizedBox(width: 10),
-              Text(
-                '($count مشتری)',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.gray500,
+                leading: const Padding(
+                  padding: EdgeInsetsDirectional.only(start: 4),
+                  child: Icon(AppIcons.search),
                 ),
+                trailing: [
+                  if (_searchTerm.isNotEmpty)
+                    IconButton(
+                      onPressed: () {
+                        _searchController.clear();
+                        _onSearchChange('');
+                      },
+                      tooltip: 'پاک کردن',
+                      icon: const Icon(AppIcons.close),
+                    ),
+                ],
+                elevation: const WidgetStatePropertyAll(0),
+                backgroundColor:
+                    WidgetStatePropertyAll(scheme.surfaceContainerHigh),
+                onChanged: _onSearchChange,
               ),
-            ],
-          ],
-        ),
-        const SizedBox(height: 12),
-        AppButton(
-          label: 'افزودن',
-          icon: AppIconName.plus,
-          fullWidth: true,
-          onPressed: _openAddModal,
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.gray300),
-            boxShadow: AppShadows.md,
+            ),
           ),
-          child: AppToggle(
-            checked: _includeArchived,
-            label: 'نمایش مشتریان آرشیو شده',
-            onChanged: _onToggleArchived,
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              child: Row(
+                children: [
+                  FilterChip(
+                    selected: _includeArchived,
+                    onSelected: _onToggleArchived,
+                    avatar: _includeArchived ? null : const Icon(AppIcons.archive),
+                    label: const Text('نمایش مشتریان آرشیو شده'),
+                  ),
+                  const Spacer(),
+                  if (customers.isNotEmpty)
+                    Text(
+                      '${toPersianNumbers('${customers.length}')} مشتری',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ],
+          ..._buildList(customers),
+          // Room for the FAB below the last card.
+          const SliverToBoxAdapter(child: SizedBox(height: 96)),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _openAddModal,
+        icon: const Icon(AppIcons.userPlus),
+        label: const Text('افزودن مشتری'),
+      ),
     );
   }
 
   List<Widget> _buildList(List<Customer> customers) {
     if (_isLoading) {
-      return [
-        const _StatusCard(
-          iconBackground: AppColors.blue100,
-          icon: SpinningIcon(size: 36, color: AppColors.blue600),
-          title: 'در حال بارگذاری...',
+      return const [
+        SliverToBoxAdapter(
+          child: EmptyState(
+            icon: SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(strokeWidth: 3),
+            ),
+            title: 'در حال بارگذاری...',
+          ),
         ),
       ];
     }
     if (customers.isEmpty) {
-      return [
-        const _StatusCard(
-          iconBackground: AppColors.gray100,
-          icon: AppIcon(AppIconName.users, size: 36, color: AppColors.gray400),
-          title: 'هیچ مشتری یافت نشد',
-          subtitle: 'برای شروع، یک مشتری جدید اضافه کنید',
+      return const [
+        SliverToBoxAdapter(
+          child: EmptyState(
+            icon: Icon(AppIcons.users),
+            title: 'هیچ مشتری یافت نشد',
+            subtitle: 'برای شروع، یک مشتری جدید اضافه کنید',
+          ),
         ),
       ];
     }
     return [
-      for (final customer in customers)
-        CustomerCard(
-          key: ValueKey(customer.id),
-          customer: customer,
-          onTap: () => _viewTransactions(customer),
-          onEdit: () => _openEditModal(customer),
-        ),
-    ];
-  }
-}
-
-class _StatusCard extends StatelessWidget {
-  final Color iconBackground;
-  final Widget icon;
-  final String title;
-  final String? subtitle;
-
-  const _StatusCard({
-    required this.iconBackground,
-    required this.icon,
-    required this.title,
-    this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return EntryAnimation(
-      type: EntryAnimationType.fadeInScale,
-      child: Container(
-        padding: const EdgeInsets.all(40),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.gray300),
-          boxShadow: AppShadows.lg,
-        ),
-        child: Column(
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: iconBackground,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              alignment: Alignment.center,
-              child: icon,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.gray700,
-              ),
-            ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                subtitle!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.gray500,
-                ),
-              ),
-            ],
-          ],
+      SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        sliver: SliverList.separated(
+          itemCount: customers.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          itemBuilder: (context, index) {
+            final customer = customers[index];
+            return CustomerCard(
+              key: ValueKey(customer.id),
+              customer: customer,
+              onTap: () => _viewTransactions(customer),
+              onEdit: () => _openEditModal(customer),
+            );
+          },
         ),
       ),
-    );
+    ];
   }
 }

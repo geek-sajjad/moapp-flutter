@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../data/backup_service.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/app_icons.dart';
 import '../../widgets/app_alert.dart';
-import '../../widgets/app_button.dart';
-import '../../widgets/app_icon.dart';
 import '../../widgets/confirm_dialog.dart';
 
 /// Content of the "backup & restore" modal.
@@ -70,45 +68,67 @@ class _BackupSheetState extends State<BackupSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'تمام اطلاعات (مشتریان و تراکنش‌ها) فقط روی همین گوشی ذخیره می‌شود. '
-          'برای جلوگیری از از دست رفتن اطلاعات، به صورت منظم از آن فایل پشتیبان '
-          'تهیه کرده و در جای امنی نگه دارید.',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: AppColors.gray600,
-            height: 1.7,
+        Card.filled(
+          color: scheme.secondaryContainer,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(AppIcons.info, color: scheme.onSecondaryContainer),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'تمام اطلاعات (مشتریان و تراکنش‌ها) فقط روی همین گوشی ذخیره می‌شود. '
+                    'برای جلوگیری از از دست رفتن اطلاعات، به صورت منظم از آن فایل پشتیبان '
+                    'تهیه کرده و در جای امنی نگه دارید.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSecondaryContainer,
+                      height: 1.7,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 20),
-        AppButton(
-          label: 'ذخیره فایل پشتیبان',
-          icon: AppIconName.download,
-          size: AppButtonSize.lg,
-          fullWidth: true,
+        if (_busy) ...[
+          const LinearProgressIndicator(),
+          const SizedBox(height: 16),
+        ],
+        FilledButton.icon(
           onPressed: _busy ? null : _export,
+          icon: const Icon(AppIcons.download),
+          label: const Text('ذخیره فایل پشتیبان'),
         ),
         const SizedBox(height: 12),
-        AppButton(
-          label: 'بازیابی از فایل پشتیبان',
-          icon: AppIconName.upload,
-          variant: AppButtonVariant.outline,
-          size: AppButtonSize.lg,
-          fullWidth: true,
+        OutlinedButton.icon(
           onPressed: _busy ? null : _restore,
+          icon: const Icon(AppIcons.upload),
+          label: const Text('بازیابی از فایل پشتیبان'),
         ),
-        const SizedBox(height: 12),
-        const Text(
-          'توجه: بازیابی، اطلاعات فعلی را به طور کامل جایگزین می‌کند.',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: AppColors.red600,
-          ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Icon(AppIcons.warning, size: 18, color: scheme.error),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'توجه: بازیابی، اطلاعات فعلی را به طور کامل جایگزین می‌کند.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: scheme.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

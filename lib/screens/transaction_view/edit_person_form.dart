@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../widgets/app_button.dart';
-import '../../widgets/app_icon.dart';
-import '../../widgets/app_text_field.dart';
+import '../../theme/app_icons.dart';
 
 class PersonFormData {
   final String name;
@@ -17,14 +15,14 @@ class PersonFormData {
 class EditPersonForm extends StatefulWidget {
   final PersonFormData initialData;
   final String buttonText;
-  final AppIconName buttonIcon;
+  final IconData buttonIcon;
   final ValueChanged<PersonFormData> onSave;
 
   const EditPersonForm({
     super.key,
     required this.initialData,
     this.buttonText = 'ذخیره تغییرات',
-    this.buttonIcon = AppIconName.save,
+    this.buttonIcon = AppIcons.save,
     required this.onSave,
   });
 
@@ -57,37 +55,51 @@ class _EditPersonFormState extends State<EditPersonForm> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const FieldLabel('نام مشتری'),
-        AppTextField(
+        TextField(
           controller: _name,
-          hintText: 'نام مشتری را وارد کنید',
+          autofocus: true,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'نام مشتری',
+            hintText: 'نام مشتری را وارد کنید',
+            prefixIcon: Icon(AppIcons.user),
+          ),
         ),
-        const SizedBox(height: 20),
-        const FieldLabel('شماره تماس'),
-        AppTextField(
+        const SizedBox(height: 16),
+        TextField(
           controller: _phone,
-          hintText: 'مثال: +989123456789',
-          textDirection: TextDirection.ltr,
+          textInputAction: TextInputAction.next,
           keyboardType: TextInputType.phone,
+          textDirection: TextDirection.ltr,
+          decoration: const InputDecoration(
+            labelText: 'شماره تماس',
+            hintText: 'مثال: +989123456789',
+            hintTextDirection: TextDirection.ltr,
+            prefixIcon: Icon(AppIcons.phone),
+          ),
         ),
-        const SizedBox(height: 20),
-        const FieldLabel('توضیحات'),
-        AppTextField(
+        const SizedBox(height: 16),
+        TextField(
           controller: _address,
-          hintText: 'توضیحات اضافی (اختیاری)',
+          minLines: 3,
           maxLines: 4,
+          keyboardType: TextInputType.multiline,
+          decoration: const InputDecoration(
+            labelText: 'توضیحات',
+            hintText: 'توضیحات اضافی (اختیاری)',
+            alignLabelWithHint: true,
+          ),
         ),
-        const SizedBox(height: 28),
-        AppButton(
-          label: widget.buttonText,
-          icon: widget.buttonIcon,
-          size: AppButtonSize.lg,
-          fullWidth: true,
+        const SizedBox(height: 24),
+        FilledButton.icon(
           onPressed: _handleSave,
+          icon: Icon(widget.buttonIcon),
+          label: Text(widget.buttonText),
         ),
       ],
     );

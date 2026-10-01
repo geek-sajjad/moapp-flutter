@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_colors.dart';
-import '../../widgets/app_button.dart';
-import '../../widgets/app_icon.dart';
-import '../../widgets/app_text_field.dart';
+import '../../theme/app_icons.dart';
 
 class CustomerFormData {
   final String name;
@@ -25,7 +22,7 @@ class CustomerFormData {
 class CustomerForm extends StatefulWidget {
   final CustomerFormData initialData;
   final String buttonText;
-  final AppIconName buttonIcon;
+  final IconData buttonIcon;
   final ValueChanged<CustomerFormData> onSave;
   final ValueChanged<String>? onArchive;
   final ValueChanged<String>? onUnarchive;
@@ -34,7 +31,7 @@ class CustomerForm extends StatefulWidget {
     super.key,
     this.initialData = const CustomerFormData(),
     this.buttonText = 'ذخیره تغییرات',
-    this.buttonIcon = AppIconName.save,
+    this.buttonIcon = AppIcons.save,
     required this.onSave,
     this.onArchive,
     this.onUnarchive,
@@ -75,57 +72,62 @@ class _CustomerFormState extends State<CustomerForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const FieldLabel('نام مشتری *'),
-        AppTextField(
+        TextField(
           controller: _name,
-          hintText: 'نام مشتری را وارد کنید',
+          autofocus: true,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'نام مشتری *',
+            hintText: 'نام مشتری را وارد کنید',
+            prefixIcon: Icon(AppIcons.user),
+          ),
         ),
-        const SizedBox(height: 20),
-        const FieldLabel('شماره تماس *'),
-        AppTextField(
+        const SizedBox(height: 16),
+        TextField(
           controller: _phone,
-          hintText: 'مثال: +989123456789',
-          textDirection: TextDirection.ltr,
+          textInputAction: TextInputAction.next,
           keyboardType: TextInputType.phone,
+          textDirection: TextDirection.ltr,
+          decoration: const InputDecoration(
+            labelText: 'شماره تماس *',
+            hintText: 'مثال: +989123456789',
+            hintTextDirection: TextDirection.ltr,
+            prefixIcon: Icon(AppIcons.phone),
+          ),
         ),
-        const SizedBox(height: 20),
-        const FieldLabel('توضیحات'),
-        AppTextField(
+        const SizedBox(height: 16),
+        TextField(
           controller: _description,
-          hintText: 'توضیحات اضافی (اختیاری)',
+          minLines: 3,
           maxLines: 4,
+          keyboardType: TextInputType.multiline,
+          decoration: const InputDecoration(
+            labelText: 'توضیحات',
+            hintText: 'توضیحات اضافی (اختیاری)',
+            alignLabelWithHint: true,
+          ),
         ),
-        const SizedBox(height: 28),
-        AppButton(
-          label: widget.buttonText,
-          icon: widget.buttonIcon,
-          size: AppButtonSize.lg,
-          fullWidth: true,
+        const SizedBox(height: 24),
+        FilledButton.icon(
           onPressed: _handleSave,
+          icon: Icon(widget.buttonIcon),
+          label: Text(widget.buttonText),
         ),
         if (customerId != null) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.only(top: 12),
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: AppColors.gray300)),
-            ),
-            child: widget.initialData.isArchived
-                ? AppButton(
-                    label: 'بازگردانی از آرشیو',
-                    icon: AppIconName.arrowLeft,
-                    variant: AppButtonVariant.outline,
-                    fullWidth: true,
-                    onPressed: () => widget.onUnarchive?.call(customerId),
-                  )
-                : AppButton(
-                    label: 'آرشیو کردن',
-                    icon: AppIconName.file,
-                    variant: AppButtonVariant.outline,
-                    fullWidth: true,
-                    onPressed: () => widget.onArchive?.call(customerId),
-                  ),
-          ),
+          const SizedBox(height: 16),
+          const Divider(),
+          const SizedBox(height: 16),
+          widget.initialData.isArchived
+              ? OutlinedButton.icon(
+                  onPressed: () => widget.onUnarchive?.call(customerId),
+                  icon: const Icon(AppIcons.unarchive),
+                  label: const Text('بازگردانی از آرشیو'),
+                )
+              : OutlinedButton.icon(
+                  onPressed: () => widget.onArchive?.call(customerId),
+                  icon: const Icon(AppIcons.archive),
+                  label: const Text('آرشیو کردن'),
+                ),
         ],
       ],
     );

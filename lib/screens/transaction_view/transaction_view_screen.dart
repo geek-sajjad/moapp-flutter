@@ -5,12 +5,10 @@ import '../../data/transaction_repository.dart';
 import '../../models/customer.dart';
 import '../../models/ledger_transaction.dart';
 import '../../services/statement_share_service.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/app_icons.dart';
 import '../../widgets/app_alert.dart';
-import '../../widgets/app_button.dart';
-import '../../widgets/app_icon.dart';
 import '../../widgets/app_modal.dart';
-import '../../widgets/entry_animation.dart';
+import '../../widgets/empty_state.dart';
 import 'edit_person_form.dart';
 import 'person_info_card.dart';
 import 'transaction_form.dart';
@@ -188,112 +186,77 @@ class _TransactionViewScreenState extends State<TransactionViewScreen> {
     final summary = _summary;
 
     return Scaffold(
-      body: SafeArea(
-        // Not a lazy ListView: the transaction form must keep its state
-        // (typed amount, date, type) while scrolled off-screen.
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(12),
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          child: Column(
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: _goBack,
+          tooltip: 'بازگشت به لیست افراد',
+          icon: const Icon(AppIcons.back),
+        ),
+        title: Text(
+          customer?.name ?? '',
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        actions: [
+          IconButton(
+            onPressed: customer == null ? null : _openEditPersonModal,
+            tooltip: 'ویرایش مشخصات',
+            icon: const Icon(AppIcons.edit),
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
+      // Not a lazy ListView: the transaction form must keep its state
+      // (typed amount, date, type) while scrolled off-screen.
+      body: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(
+          16,
+          8,
+          16,
+          16 + MediaQuery.of(context).padding.bottom,
+        ),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Back Button
-            EntryAnimation(
-              type: EntryAnimationType.fadeInDown,
-              child: Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: AppButton(
-                  label: 'بازگشت به لیست افراد',
-                  icon: AppIconName.arrowLeft,
-                  iconSize: 16,
-                  variant: AppButtonVariant.outline,
-                  size: AppButtonSize.sm,
-                  onPressed: _goBack,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Person Info Card
+            // Balance card
             if (customer != null && summary != null) ...[
-              PersonInfoCard(
-                customer: customer,
-                summary: summary,
-                onEdit: _openEditPersonModal,
-              ),
+              PersonInfoCard(customer: customer, summary: summary),
               const SizedBox(height: 16),
             ],
 
-            // Transaction Form Card
+            // Transaction form
             TransactionForm(
               key: const ValueKey('transaction-form'),
               onSave: _saveTransaction,
             ),
             const SizedBox(height: 16),
 
-            // Transactions List
+            // Transactions list
             if (_transactionsLoading)
-              const _LoadingCard()
+              const Card.outlined(
+                child: EmptyState(
+                  icon: SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(strokeWidth: 3),
+                  ),
+                  title: 'در حال بارگذاری تراکنش‌ها...',
+                ),
+              )
             else
               TransactionList(transactions: _transactions),
 
-            // Share Button
+            // Share button
             if (_transactions.isNotEmpty) ...[
               const SizedBox(height: 16),
-              EntryAnimation(
-                duration: const Duration(milliseconds: 500),
-                child: AppButton(
-                  label: 'اشتراک‌گذاری صورتحساب',
-                  icon: AppIconName.share,
-                  variant: AppButtonVariant.secondary,
-                  size: AppButtonSize.lg,
-                  fullWidth: true,
-                  onPressed: _shareStatement,
-                ),
+              FilledButton.tonalIcon(
+                onPressed: _shareStatement,
+                icon: const Icon(AppIcons.share),
+                label: const Text('اشتراک‌گذاری صورتحساب'),
               ),
             ],
           ],
-          ),
         ),
-      ),
-    );
-  }
-}
-
-class _LoadingCard extends StatelessWidget {
-  const _LoadingCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(40),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.gray300),
-        boxShadow: AppShadows.xl,
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: AppColors.blue50,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            alignment: Alignment.center,
-            child: const SpinningIcon(size: 28),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'در حال بارگذاری تراکنش‌ها...',
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              color: AppColors.gray600,
-            ),
-          ),
-        ],
       ),
     );
   }

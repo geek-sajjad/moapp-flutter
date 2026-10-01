@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
+import '../theme/app_icons.dart';
+import '../theme/app_theme.dart';
 
 enum AlertType { success, error, info, warning }
 
@@ -13,7 +14,7 @@ class AlertConfig {
   const AlertConfig(this.message, this.type);
 }
 
-/// Port of the web `AlertService` (toast at the top of the screen).
+/// Port of the web `AlertService`. Messages are shown as an M3 snackbar.
 class AlertService {
   AlertService._();
 
@@ -25,7 +26,7 @@ class AlertService {
   void show(String message, {AlertType type = AlertType.info, Duration? duration}) {
     _timer?.cancel();
     alert.value = AlertConfig(message, type);
-    _timer = Timer(duration ?? const Duration(milliseconds: 2000), hide);
+    _timer = Timer(duration ?? const Duration(milliseconds: 2500), hide);
   }
 
   void showSuccess(String message, {Duration? duration}) =>
@@ -43,7 +44,8 @@ class AlertService {
   }
 }
 
-/// Renders the current alert above everything else (incl. bottom sheets).
+/// Renders the current alert above everything else (incl. bottom sheets and
+/// dialogs, which a Scaffold snackbar would be hidden behind).
 /// Used from `MaterialApp.builder`.
 class AlertHost extends StatelessWidget {
   final Widget child;
@@ -59,14 +61,18 @@ class AlertHost extends StatelessWidget {
           valueListenable: AlertService.instance.alert,
           builder: (context, alert, _) {
             if (alert == null) return const SizedBox.shrink();
+            final media = MediaQuery.of(context);
+            final bottomInset = media.viewInsets.bottom > media.padding.bottom
+                ? media.viewInsets.bottom
+                : media.padding.bottom;
             return Positioned(
-              top: MediaQuery.of(context).padding.top + 12,
-              left: 12,
-              right: 12,
+              bottom: bottomInset + 16,
+              left: 16,
+              right: 16,
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 448),
-                  child: _AlertToast(key: ValueKey(alert), alert: alert),
+                  constraints: const BoxConstraints(maxWidth: 560),
+                  child: _AlertSnackbar(key: ValueKey(alert), alert: alert),
                 ),
               ),
             );
@@ -77,71 +83,55 @@ class AlertHost extends StatelessWidget {
   }
 }
 
-class _AlertToast extends StatelessWidget {
+class _AlertSnackbar extends StatelessWidget {
   final AlertConfig alert;
 
-  const _AlertToast({super.key, required this.alert});
+  const _AlertSnackbar({super.key, required this.alert});
 
   @override
   Widget build(BuildContext context) {
-    final (bg, fg, border, icon) = switch (alert.type) {
-      AlertType.success => (
-          AppColors.green50,
-          AppColors.green900,
-          AppColors.green200,
-          Icons.check_circle_outline,
-        ),
-      AlertType.error => (
-          AppColors.red50,
-          AppColors.red900,
-          AppColors.red200,
-          Icons.highlight_off,
-        ),
-      AlertType.warning => (
-          AppColors.yellow50,
-          AppColors.yellow900,
-          AppColors.yellow200,
-          Icons.warning_amber_rounded,
-        ),
-      AlertType.info => (
-          AppColors.blue50,
-          AppColors.blue900,
-          AppColors.blue200,
-          Icons.info_outline,
-        ),
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    // The snackbar uses the inverse surface, so take accent colors from the
+    // opposite brightness.
+    final inverseLedger = theme.brightness == Brightness.light
+        ? LedgerColors.dark
+        : LedgerColors.light;
+
+    final (iconColor, icon) = switch (alert.type) {
+      AlertType.success => (inverseLedger.credit, AppIcons.success),
+      AlertType.error => (inverseLedger.debit, AppIcons.error),
+      AlertType.warning => (Colors.amber, AppIcons.warning),
+      AlertType.info => (scheme.inversePrimary, AppIcons.info),
     };
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOutCubic,
       builder: (context, t, child) => Opacity(
         opacity: t,
-        child: Transform.translate(offset: Offset(0, -12 * (1 - t)), child: child),
+        child: Transform.translate(offset: Offset(0, 16 * (1 - t)), child: child),
       ),
       child: Material(
-        type: MaterialType.transparency,
-        child: GestureDetector(
+        color: scheme.inverseSurface,
+        elevation: 6,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
           onTap: AlertService.instance.hide,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: border, width: 2),
-              boxShadow: AppShadows.xxl,
-            ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
-                Icon(icon, size: 20, color: fg),
-                const SizedBox(width: 8),
+                Icon(icon, size: 22, color: iconColor),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     alert.message,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: fg,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onInverseSurface,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),

@@ -37,7 +37,7 @@ Release build: `flutter build apk --release`. You still need to configure signin
 
 ```
 lib/
-  main.dart                      MaterialApp (fa locale, RTL, Vazirmatn) + toast host
+  main.dart                      MaterialApp (fa locale, RTL, Vazirmatn, light/dark) + alert host
   models/                        Customer, LedgerTransaction, TransactionSummary
   data/
     app_database.dart            sqflite schema (customers, transactions)
@@ -46,13 +46,12 @@ lib/
     backup_service.dart          JSON export / import
   services/statement_share_service.dart   = web ExportService.shareStatement
   utils/persian_format.dart      Persian digits, number & Jalali formatting
-  theme/                         Tailwind colors / shadows, ThemeData
-  widgets/                       app-button, input, toggle, modal, confirm,
-                                 alert (toast), persian date picker, icons
+  theme/                         Material 3 ThemeData, debit/credit colors, Phosphor icons
+  widgets/                       bottom sheet, confirm dialog, snackbar alerts,
+                                 Jalali date picker dialog, empty state, avatar
   screens/
     customer_list/               /customers page
     transaction_view/            /transactions/:id page
-assets/icons/                    the web app's SVG icons
 assets/fonts/                    Vazirmatn TTF
 tool/setup_android.dart          post-`flutter create` patcher
 ```

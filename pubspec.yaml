@@ -20,8 +20,6 @@ dependencies:
   shamsi_date: ^1.1.1
 
   # SVG icons (same feather icons as the web app)
-  flutter_svg: ^2.0.16
-
   # Share statement via SMS / system share sheet
   url_launcher: ^6.3.1
   share_plus: ^11.0.0
@@ -30,7 +28,6 @@ dependencies:
   file_picker: ^10.1.9
 
   uuid: ^4.5.1
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -39,14 +36,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  assets:
-    - assets/icons/
-
   fonts:
     - family: Vazirmatn
       fonts:
-        - asset: assets/fonts/Vazirmatn-Light.ttf
-          weight: 300
         - asset: assets/fonts/Vazirmatn-Regular.ttf
           weight: 400
         - asset: assets/fonts/Vazirmatn-Medium.ttf
@@ -57,3 +49,8 @@ flutter:
           weight: 700
         - asset: assets/fonts/Vazirmatn-ExtraBold.ttf
           weight: 800
+
+    # Phosphor icons, Light weight only (MIT, https://phosphoricons.com).
+    - family: PhosphorLight
+      fonts:
+        - asset: assets/fonts/Phosphor-Light.ttf

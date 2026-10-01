@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../models/ledger_transaction.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/app_icons.dart';
+import '../../theme/app_theme.dart';
 import '../../utils/persian_format.dart';
-import '../../widgets/app_button.dart';
-import '../../widgets/app_icon.dart';
-import '../../widgets/app_text_field.dart';
-import '../../widgets/entry_animation.dart';
 import '../../widgets/persian_date_picker.dart';
 
 /// Port of the web `app-transaction-form` (create only, like the web app).
@@ -63,122 +60,88 @@ class _TransactionFormState extends State<TransactionForm> {
 
   @override
   Widget build(BuildContext context) {
-    return EntryAnimation(
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.gray300),
-          boxShadow: AppShadows.xl,
-        ),
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Card.outlined(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              decoration: const BoxDecoration(
-                gradient: cardHeaderGradient,
-                border: Border(bottom: BorderSide(color: AppColors.gray300)),
+            Row(
+              children: [
+                Icon(AppIcons.receipt, color: scheme.primary),
+                const SizedBox(width: 10),
+                Text(
+                  'ثبت تراکنش جدید',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            _TypeSelect(
+              value: _type,
+              onChanged: (type) => setState(() => _type = type),
+            ),
+            const SizedBox(height: 20),
+            PersianDatePicker(
+              label: 'تاریخ تراکنش',
+              value: _date,
+              onChanged: (value) => setState(() => _date = value),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _amount,
+              keyboardType: TextInputType.number,
+              textDirection: TextDirection.ltr,
+              inputFormatters: [ThousandsAmountFormatter()],
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
               ),
-              child: const Row(
-                children: [
-                  AppIcon(AppIconName.dollarSign, size: 20, color: AppColors.blue600),
-                  SizedBox(width: 10),
-                  Text(
-                    'ثبت تراکنش جدید',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.gray900,
+              decoration: InputDecoration(
+                labelText: 'مبلغ (تومان)',
+                hintText: 'مبلغ را وارد کنید',
+                // Gap between the digits and the unit (start side in RTL).
+                suffix: Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 8),
+                  child: Text(
+                    'تومان',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
                     ),
                   ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const FieldLabel('تاریخ تراکنش'),
-                  PersianDatePicker(
-                    value: _date,
-                    onChanged: (value) => setState(() => _date = value),
-                  ),
-                  const SizedBox(height: 20),
-                  const FieldLabel('نوع تراکنش'),
-                  _TypeSelect(
-                    value: _type,
-                    onChanged: (type) => setState(() => _type = type),
-                  ),
-                  const SizedBox(height: 20),
-                  const FieldLabel('مبلغ (تومان)'),
-                  _AmountField(controller: _amount),
-                  const SizedBox(height: 20),
-                  const FieldLabel('توضیحات'),
-                  AppTextField(
-                    controller: _description,
-                    hintText: 'توضیحات تراکنش را وارد کنید',
-                    maxLines: 4,
-                  ),
-                  const SizedBox(height: 24),
-                  AppButton(
-                    label: 'ثبت',
-                    icon: AppIconName.plus,
-                    size: AppButtonSize.lg,
-                    fullWidth: true,
-                    onPressed: _saving ? null : _handleSave,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Amount input (LTR) with the fixed "تومان" label on its left side.
-class _AmountField extends StatelessWidget {
-  final TextEditingController controller;
-
-  const _AmountField({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: Stack(
-        alignment: Alignment.centerLeft,
-        children: [
-          AppTextField(
-            controller: controller,
-            hintText: 'مبلغ را وارد کنید',
-            textDirection: TextDirection.ltr,
-            keyboardType: TextInputType.number,
-            inputFormatters: [ThousandsAmountFormatter()],
-            // Leaves room for the label (web: `pl-20`). In this LTR
-            // context the prefix slot is on the left.
-            leadingSpacer: 64,
-          ),
-          const Positioned(
-            left: 16,
-            child: IgnorePointer(
-              child: Text(
-                'تومان',
-                textDirection: TextDirection.rtl,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.gray500,
                 ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            TextField(
+              controller: _description,
+              minLines: 2,
+              maxLines: 4,
+              keyboardType: TextInputType.multiline,
+              decoration: const InputDecoration(
+                labelText: 'توضیحات',
+                hintText: 'توضیحات تراکنش را وارد کنید',
+                alignLabelWithHint: true,
+              ),
+            ),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: _saving ? null : _handleSave,
+              icon: _saving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(AppIcons.plus),
+              label: const Text('ثبت'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -229,7 +192,7 @@ class ThousandsAmountFormatter extends TextInputFormatter {
   }
 }
 
-/// The colored "نوع تراکنش" select.
+/// "نوع تراکنش": debit / credit segmented button, tinted by the selection.
 class _TypeSelect extends StatelessWidget {
   final TransactionType value;
   final ValueChanged<TransactionType> onChanged;
@@ -238,62 +201,62 @@ class _TypeSelect extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ledger = LedgerColors.of(context);
     final isDebit = value == TransactionType.debit;
-    final border = isDebit ? AppColors.red500 : AppColors.green500;
-    final bg = isDebit ? AppColors.red50 : AppColors.green50;
-    final fg = isDebit ? AppColors.red700 : AppColors.green700;
+    final selectedBg = isDebit ? ledger.debitContainer : ledger.creditContainer;
+    final selectedFg =
+        isDebit ? ledger.onDebitContainer : ledger.onCreditContainer;
 
-    return Container(
-      constraints: const BoxConstraints(minHeight: 48),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: border, width: 2),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<TransactionType>(
-          value: value,
-          isExpanded: true,
-          iconEnabledColor: fg,
-          borderRadius: BorderRadius.circular(12),
-          dropdownColor: AppColors.white,
-          style: TextStyle(
-            fontFamily: Theme.of(context).textTheme.bodyMedium?.fontFamily,
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: fg,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SegmentedButton<TransactionType>(
+          segments: const [
+            // Same option order as the web select: DEBIT first, then CREDIT.
+            ButtonSegment(
+              value: TransactionType.debit,
+              icon: Icon(AppIcons.minus),
+              label: Text('بدهکار'),
+            ),
+            ButtonSegment(
+              value: TransactionType.credit,
+              icon: Icon(AppIcons.plus),
+              label: Text('بستانکار'),
+            ),
+          ],
+          selected: {value},
+          showSelectedIcon: false,
+          onSelectionChanged: (selection) => onChanged(selection.first),
+          style: ButtonStyle(
+            minimumSize: const WidgetStatePropertyAll(Size(0, 48)),
+            textStyle: WidgetStatePropertyAll(
+              theme.textTheme.labelLarge?.copyWith(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            backgroundColor: WidgetStateProperty.resolveWith(
+              (states) =>
+                  states.contains(WidgetState.selected) ? selectedBg : null,
+            ),
+            foregroundColor: WidgetStateProperty.resolveWith(
+              (states) =>
+                  states.contains(WidgetState.selected) ? selectedFg : null,
+            ),
           ),
-          selectedItemBuilder: (context) => [
-            for (final type in _order)
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: Text(_label(type)),
-              ),
-          ],
-          items: [
-            for (final type in _order)
-              DropdownMenuItem(
-                value: type,
-                child: Text(
-                  _label(type),
-                  style: const TextStyle(color: AppColors.gray900),
-                ),
-              ),
-          ],
-          onChanged: (type) {
-            if (type != null) onChanged(type);
-          },
         ),
-      ),
+        const SizedBox(height: 6),
+        Padding(
+          padding: const EdgeInsetsDirectional.only(start: 16),
+          child: Text(
+            isDebit ? 'شما بدهکار هستید' : 'شما بستانکار هستید',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
     );
   }
-
-  /// Same option order as the web select: DEBIT first, then CREDIT.
-  static const _order = [TransactionType.debit, TransactionType.credit];
-
-  static String _label(TransactionType type) => switch (type) {
-        TransactionType.debit => 'بدهکار (شما بدهکار هستید)',
-        TransactionType.credit => 'بستانکار (شما بستانکار هستید)',
-      };
 }
