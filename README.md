@@ -4,18 +4,26 @@ This is the Flutter port of the web app (NestJS + Angular). It runs offline for 
 
 ## First-time setup (on a machine with Flutter + Android SDK)
 
-The `android/` folder is not checked in. Generate it, then patch it:
+The `android/` folder is checked in, already patched by `tool/setup_android.dart`:
 
 ```bash
-cd daftar-moein-flutter
-flutter create . --platforms android --org ir.daftarmoein --project-name daftar_moein
-dart run tool/setup_android.dart
 flutter pub get
 flutter test        # unit tests (formatting, statement text, backup parsing)
 flutter run         # on a connected device / emulator
 ```
 
+To regenerate `android/` from scratch, delete it and run:
+
+```bash
+flutter create . --platforms android --org ir.daftarmoein --project-name daftar_moein
+dart tool/setup_android.dart
+```
+
 `flutter create` never overwrites files that already exist, so `lib/`, `pubspec.yaml` and the other project files stay unchanged.
+
+`android/build.gradle.kts` compiles plugins against SDK platform 36, and `android/settings.gradle.kts` makes plugins reuse the project's AGP version, so a build doesn't need SDK platform 35 or older AGP versions.
+
+On Windows, if your Flutter SDK path contains a space, Dart build hooks fail. Run Flutter through the 8.3 short path (e.g. `C:\Users\SAJADS~1\develop\flutter\bin\flutter.bat`) and set the same path as `flutter.sdk` in `android/local.properties`.
 
 `tool/setup_android.dart` makes these changes:
 - sets `applicationId` to `ir.daftarmoein.app`
